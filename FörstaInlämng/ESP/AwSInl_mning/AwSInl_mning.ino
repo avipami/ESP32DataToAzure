@@ -1,31 +1,11 @@
-#include "certs.h"
-#include <WiFi.h>
-#include <PubSubClient.h>
-#include <WiFiClientSecure.h>
-#include <ArduinoJson.h>
-#include <RH_ASK.h>
-#include <SPI.h>
+// Välkommen till magins land.. För att vi ska kunna nå en uppkoppling med AWS gudarna
+// måste några saker till
+// I certs.h behöver du lägga in nycklarna till AWS portarna
+// I includes_others.h måste det till en annan nyckel i connection
+// Glöm ej att namnge dina gudars namn och lösenordet för uppkoppling i ssid och pass under includes_others.h
+// Vilken devicename du har måste även anges 
 
-#define AWS_IOT_TOPIC_SUB "toilet"
-#define AWS_IOT_TOPIC_PUB "iotKitchen"
-#define tempDiff 0.5
-
-static bool _connected = false;
-
-float currentTemp = 0;
-float previousTemp = 0;
-
-char * deviceName = "ESPDEV";
-char * ssid = "Gurka";
-char * pass = "gintonic";
-char * connection = "asn1gih30o3yg-ats.iot.eu-north-1.amazonaws.com";
-char postNord[100];
-
-RH_ASK driver(2000, 4, 5, 0);
-WiFiClientSecure espClient = WiFiClientSecure();
-PubSubClient client(espClient);
-
-
+#include "includes_others.h"
 
 void setup()
 {
@@ -34,8 +14,8 @@ void setup()
   {
     Serial.println("init failed");
   }
-  initWifi();
-  initAws();
+  initWifi();//initierar en andlig koppling
+  initAws();//initierar uppkoppling med molnen
 }
 
 void loop() {
@@ -44,10 +24,10 @@ void loop() {
     uint8_t temp[30];
     uint8_t buflen = sizeof(temp);
 
-    if (driver.recv(temp, &buflen))
+    if (driver.recv(temp, &buflen))//här tar vi emot magiska formler från luften
     {
-      DynamicJsonDocument doc(1000);
-      DeserializationError err = deserializeJson(doc, (char*)temp);
+      DynamicJsonDocument doc(1000);//Spellbook som kan innehålla allt eller inget
+      DeserializationError err = deserializeJson(doc, (char*)temp);//lägger in en trollformel skickad via luften
 
       if (err)
       {
@@ -55,20 +35,19 @@ void loop() {
         Serial.println(err.c_str());
         return;
       }
-      currentTemp = doc["Temp"];
-      serializeJson(doc, postNord);
+      currentTemp = doc["Temp"];//ur den magiska boken tar vi ut ett värde som vi lägger åt sidan.
+      serializeJson(doc, postNord);//kastar tillbaka alla formler på sin plats och stänger boken. med en kopia skickas den med postNord
     }
 
-    Serial.print("postNord");
-    Serial.println(postNord);
-    if (currentTemp > (previousTemp + tempDiff) || currentTemp < (previousTemp - tempDiff))
+    Serial.println(postNord);//här kontrollerar vi att formeln som ska skickas är korrekt
+    if (currentTemp > (previousTemp + tempDiff) || currentTemp < (previousTemp - tempDiff))//en magisk formel för att förhindra fri passage till molnen
     {
       Serial.print("current temp");
       Serial.println(currentTemp);
       Serial.print("previous temp");
       Serial.println(previousTemp);
       
-      if (publishMessage(postNord))
+      if (publishMessage(postNord))//skickar boken med postNord för vidare transport
       {
         Serial.println("sent ok");
       }
@@ -80,6 +59,6 @@ void loop() {
       previousTemp = currentTemp;
     }
   }
-  client.loop();
+  client.loop();//för kontroll av incoming och publish data och uppkoppling
   delay(2222);
 }

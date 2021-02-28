@@ -1,16 +1,4 @@
-#include "includesOther.h"
-RH_ASK driver(2000, 4, 5, 0);
-
-char* ssid = "Gurka";
-char* pass = "gintonic";
-char* connectionString = "HostName=vinniesEmpire.azure-devices.net;DeviceId=ESP32;SharedAccessKey=JNFUzY/jYd2RI7zdxWxGU3Gni6ZFHAN4FBJ1d4ya5jc=";
-static bool _connected = false;
-
-char payload[60];
-
-#define tempDiff 0.5
-float currentTemp = 0;
-float previousTemp = 0;
+#include "includesOther.h"  // inkluderar min h fil med includes 
 
 void setup()
 {
@@ -25,6 +13,7 @@ void setup()
   initWiFi();
   initIotHub();
 }
+//------------------------------//
 char postNord[100];
 void loop()
 {
@@ -48,11 +37,6 @@ void loop()
       serializeJson(doc, postNord);
     }
 
-    //char tempor[60];
-    //strcpy(tempor, (char*)temp);
-    //Serial.println(tempor);
-
-    //snprintf(payload, 128, "Message Bajs # %21d", ++count);
     Serial.print("postNord");
     Serial.println(postNord);
     if (currentTemp > (previousTemp + tempDiff) || currentTemp < (previousTemp - tempDiff))
